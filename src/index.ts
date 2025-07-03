@@ -56,7 +56,7 @@ export type { KTReparentConfigInterface, KTReparentInterface } from './component
 export { KTToggle } from './components/toggle';
 export type { KTToggleConfigInterface, KTToggleInterface } from './components/toggle';
 export { KTTooltip } from './components/tooltip';
-export type { KTTooltipConfigInterface, KTTooltipInterface } from './components/tooltip';
+export type { KTTooltipConfigInterface, KTTooltipInterface, KTTooltipTriggerType } from './components/tooltip';
 export { KTStepper } from './components/stepper';
 export type { KTStepperConfigInterface, KTStepperInterface } from './components/stepper';
 export { KTThemeSwitch } from './components/theme-switch';
