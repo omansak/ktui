@@ -24,7 +24,7 @@ export class KTToggle extends KTComponent implements KTToggleInterface {
 		attribute: '',
 	};
 	protected override _config: KTToggleConfigInterface = this._defaultConfig;
-	protected _targetElement: HTMLElement;
+	protected _targetElement: HTMLElement | null = null;
 
 	constructor(
 		element: HTMLElement,
@@ -35,7 +35,7 @@ export class KTToggle extends KTComponent implements KTToggleInterface {
 		if (KTData.has(element as HTMLElement, this._name)) return;
 
 		this._init(element);
-		this._buildConfig(config);
+		this._buildConfig(config || {});
 
 		this._targetElement = this._getTargetElement();
 		if (!this._targetElement) {
@@ -54,6 +54,8 @@ export class KTToggle extends KTComponent implements KTToggleInterface {
 	}
 
 	private _getTargetElement(): HTMLElement | null {
+		if (!this._element) return null;
+
 		return (
 			KTDom.getElement(
 				this._element.getAttribute('data-kt-toggle') as string,
@@ -115,7 +117,7 @@ export class KTToggle extends KTComponent implements KTToggleInterface {
 	}
 
 	public _isActive(): boolean {
-		if (!this._element) return false;
+		if (!this._element || !this._targetElement) return false;
 
 		return (
 			KTDom.hasClass(this._targetElement, this._getOption('class') as string) ||
@@ -135,7 +137,7 @@ export class KTToggle extends KTComponent implements KTToggleInterface {
 		return this._isActive();
 	}
 
-	public static getInstance(element: HTMLElement): KTToggle {
+	public static getInstance(element: HTMLElement): KTToggle | null {
 		if (!element) return null;
 
 		if (KTData.has(element, 'toggle')) {
