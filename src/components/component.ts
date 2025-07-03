@@ -26,6 +26,7 @@ export default class KTComponent {
 	protected _events!: Map<string, Map<string, CallableFunction>>;
 	protected _uid: string | null = null;
 	protected _element: HTMLElement | null = null;
+	protected _initializedHandlers = new Array<{ type: any, listener: any }>();
 
 	protected _init(element: HTMLElement | null) {
 		if (!element) {
@@ -121,6 +122,13 @@ export default class KTComponent {
 
 		this._element.removeAttribute(`data-kt-${this._name}-initialized`);
 		KTData.remove(this._element, this._name);
+
+		if(this._initializedHandlers.length > 0) {
+			this._initializedHandlers.forEach(handler => {
+				this._removeEventListener(handler.type, handler.listener);
+			});
+			this._initializedHandlers = [];
+		}
 	}
 
 	public on(eventType: string, callback: CallableFunction): string {
@@ -136,6 +144,18 @@ export default class KTComponent {
 		}
 
 		return eventId;
+	}
+
+	protected _addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+	protected _addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void {
+		this._element?.addEventListener(type, listener, options);
+		this._initializedHandlers.push({ type, listener });
+	}
+
+	protected _removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+	protected _removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void {
+		this._element?.removeEventListener(type, listener, options);
+		this._initializedHandlers = this._initializedHandlers.filter(handler => !(handler.type === type && handler.listener === listener));
 	}
 
 	public off(eventType: string, eventId: string): void {
