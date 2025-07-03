@@ -322,7 +322,7 @@ export class KTDatepicker extends KTComponent {
 		);
 
 		// Add keyboard events to the root element
-		this._element.addEventListener('keydown', (e) => {
+		this._addEventListener('keydown', (e) => {
 			if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
 				const state = this._state.getState();
 				if (!state.isOpen) {

@@ -43,7 +43,7 @@ export class KTScrollable extends KTComponent implements KTScrollableInterface {
 
 	protected _handlers(): void {
 		if (!this._element) return;
-		this._element.addEventListener('scroll', () => {
+		this._addEventListener('scroll', () => {
 			if (!this._element) return;
 			localStorage.setItem(
 				`${this._elementId}st`,

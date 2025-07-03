@@ -83,21 +83,21 @@ export class KTTooltip extends KTComponent implements KTTooltipInterface {
 		if (!this._element) return;
 
 		if (this._getOption('trigger') === 'click') {
-			this._element.addEventListener('click', () => this._toggle());
+			this._addEventListener('click', () => this._toggle());
 		}
 
 		if (this._getOption('trigger') === 'focus') {
-			this._element.addEventListener('focus', () => this._toggle());
-			this._element.addEventListener('blur', () => this._hide());
+			this._addEventListener('focus', () => this._toggle());
+			this._addEventListener('blur', () => this._hide());
 		}
 
 		if (this._getOption('trigger') === 'hover') {
-			this._element.addEventListener('mouseenter', () => this._show());
-			this._element.addEventListener('mouseleave', () => this._hide());
+			this._addEventListener('mouseenter', () => this._show());
+			this._addEventListener('mouseleave', () => this._hide());
 		}
 	}
 
-	protected _show(): void {
+	protected _show(callback?: () => void): void {
 		if (this._timeout) {
 			clearTimeout(this._timeout);
 			this._timeout = null;
@@ -139,13 +139,17 @@ export class KTTooltip extends KTComponent implements KTTooltipInterface {
 					this._transitioning = false;
 					this._fireEvent('shown');
 					this._dispatchEvent('shown');
+
+					if (callback) {
+						callback();
+					}
 				});
 			},
 			this._getOption('delayShow') as number,
 		);
 	}
 
-	protected _hide(): void {
+	protected _hide(callback?: () => void): void {
 		if (this._timeout) {
 			clearTimeout(this._timeout);
 			this._timeout = null;
@@ -189,13 +193,17 @@ export class KTTooltip extends KTComponent implements KTTooltipInterface {
 					this._transitioning = false;
 					this._fireEvent('hidden');
 					this._dispatchEvent('hidden');
+
+					if (callback) {
+						callback();
+					}
 				});
 			},
 			this._getOption('delayHide') as number,
 		);
 	}
 
-	protected _toggle(): void {
+	protected _toggle(callback?: () => void): void {
 		const payload = { cancel: false };
 		this._fireEvent('toggle', payload);
 		this._dispatchEvent('toggle', payload);
@@ -204,9 +212,9 @@ export class KTTooltip extends KTComponent implements KTTooltipInterface {
 		}
 
 		if (this._isOpen) {
-			this._hide();
+			this._hide(callback);
 		} else {
-			this._show();
+			this._show(callback);
 		}
 	}
 
@@ -228,9 +236,9 @@ export class KTTooltip extends KTComponent implements KTTooltipInterface {
 		}
 		const offset = offsetValue
 			? offsetValue
-					.toString()
-					.split(',')
-					.map((value) => parseInt(value.trim(), 10))
+				.toString()
+				.split(',')
+				.map((value) => parseInt(value.trim(), 10))
 			: [0, 0];
 
 		if (!this._targetElement) {
@@ -286,16 +294,16 @@ export class KTTooltip extends KTComponent implements KTTooltipInterface {
 		this._targetElement.style.zIndex = String(zindex);
 	}
 
-	public show(): void {
-		this._show();
+	public show(callback?: () => void): void {
+		this._show(callback);
 	}
 
-	public hide(): void {
-		this._hide();
+	public hide(callback?: () => void): void {
+		this._hide(callback);
 	}
 
-	public toggle(): void {
-		this._toggle();
+	public toggle(callback?: () => void): void {
+		this._toggle(callback);
 	}
 
 	public getContentElement(): HTMLElement | null {
@@ -312,6 +320,25 @@ export class KTTooltip extends KTComponent implements KTTooltipInterface {
 
 	public isPermanent(): boolean {
 		return this._getOption('permanent') as boolean;
+	}
+
+	public override dispose(callback?: () => void): void {
+		if (this._isOpen) {
+			this.hide(() => {
+				super.dispose();
+
+				if (callback) {
+					callback();
+				}
+			})
+		}
+		else {
+			super.dispose();
+
+			if (callback) {
+				callback();
+			}
+		}
 	}
 
 	public static initHandlers(): void {

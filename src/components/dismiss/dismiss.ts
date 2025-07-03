@@ -59,7 +59,7 @@ export class KTDismiss extends KTComponent implements KTDismissInterface {
 	protected _handlers(): void {
 		if (!this._element) return;
 
-		this._element.addEventListener('click', (event: Event) => {
+		this._addEventListener('click', (event: Event) => {
 			event.preventDefault();
 
 			if ((this._getOption('interrupt') as boolean) === true) {

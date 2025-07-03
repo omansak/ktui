@@ -48,7 +48,7 @@ export class KTToggle extends KTComponent implements KTToggleInterface {
 	protected _handlers(): void {
 		if (!this._element) return;
 
-		this._element.addEventListener('click', () => {
+		this._addEventListener('click', () => {
 			this._toggle();
 		});
 	}

@@ -59,7 +59,7 @@ export class KTScrollto extends KTComponent implements KTScrolltoInterface {
 	protected _handlers(): void {
 		if (!this._element) return;
 
-		this._element.addEventListener('click', (event: Event) => {
+		this._addEventListener('click', (event: Event) => {
 			event.preventDefault();
 			this._scroll();
 		});

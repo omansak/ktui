@@ -53,7 +53,7 @@ export class KTCollapse extends KTComponent implements KTCollapseInterface {
 	}
 
 	protected _handlers(): void {
-		this._element.addEventListener('click', (event: Event) => {
+		this._addEventListener('click', (event: Event) => {
 			event.preventDefault();
 
 			this._toggle();
