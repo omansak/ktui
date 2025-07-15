@@ -42,13 +42,10 @@ export class KTTabs extends KTComponent implements KTTabsInterface {
 		this._currentTabElement = this._element.querySelector(
 			'.active[data-kt-tab-toggle]',
 		);
-		this._currentContentElement =
-			(this._currentTabElement &&
-				(KTDom.getElement(
-					this._currentTabElement.getAttribute('data-kt-tab-toggle'),
-				) ||
-					KTDom.getElement(this._currentTabElement.getAttribute('href')))) ||
-			null;
+
+		const attr = this._currentTabElement?.getAttribute('data-kt-tab-toggle') || this._currentTabElement?.getAttribute('href');
+
+		this._currentContentElement = (this._currentTabElement && attr && (KTDom.getElement(attr) || KTDom.getElement(attr))) || null;
 
 		this._handlers();
 	}
@@ -60,9 +57,11 @@ export class KTTabs extends KTComponent implements KTTabsInterface {
 			this._element,
 			'[data-kt-tab-toggle]',
 			'click',
-			(event: Event, target: HTMLElement) => {
-				event.preventDefault();
-				this._show(target);
+			(event?: Event, target?: HTMLElement) => {
+				event?.preventDefault();
+
+				if (target)
+					this._show(target);
 			},
 		);
 	}
@@ -83,38 +82,47 @@ export class KTTabs extends KTComponent implements KTTabsInterface {
 			this._getOption('hiddenClass') as string,
 		);
 		this._lastTabElement = this._currentTabElement;
-		this._getDropdownToggleElement(this._lastTabElement)?.classList.remove(
-			'active',
-		);
+
+		if (this._lastTabElement)
+			this._getDropdownToggleElement(this._lastTabElement)?.classList.remove(
+				'active',
+			);
 
 		this._lastContentElement = this._currentContentElement;
 		this._currentTabElement = tabElement;
-		this._currentContentElement =
-			KTDom.getElement(tabElement.getAttribute('data-kt-tab-toggle')) ||
-			KTDom.getElement(tabElement.getAttribute('href'));
+		const attr = tabElement.getAttribute('data-kt-tab-toggle') || tabElement.getAttribute('href');
+
+		if (!attr)
+			return;
+
+		this._currentContentElement = KTDom.getElement(attr);
+
+		if (!this._currentContentElement)
+			return;
+
 		this._currentTabElement?.classList.add('active');
 		this._currentTabElement?.classList.add('selected');
-		this._currentContentElement?.classList.remove(
+		this._currentContentElement!.classList.remove(
 			this._getOption('hiddenClass') as string,
 		);
 		this._getDropdownToggleElement(this._currentTabElement)?.classList.add(
 			'active',
 		);
 
-		this._currentContentElement.style.opacity = '0';
-		KTDom.reflow(this._currentContentElement);
-		this._currentContentElement.style.opacity = '1';
+		this._currentContentElement!.style.opacity = '0';
+		KTDom.reflow(this._currentContentElement!);
+		this._currentContentElement!.style.opacity = '1';
 
-		KTDom.transitionEnd(this._currentContentElement, () => {
+		KTDom.transitionEnd(this._currentContentElement!, () => {
 			this._isTransitioning = false;
-			this._currentContentElement.style.opacity = '';
+			this._currentContentElement!.style.opacity = '';
 
 			this._fireEvent('shown');
 			this._dispatchEvent('shown');
 		});
 	}
 
-	protected _getDropdownToggleElement(element: HTMLElement): HTMLElement {
+	protected _getDropdownToggleElement(element: HTMLElement): HTMLElement | null {
 		const containerElement = element.closest(
 			'[data-kt-dropdown-initialized],[data-kt-menu-initialized]',
 		) as HTMLElement;
@@ -140,13 +148,25 @@ export class KTTabs extends KTComponent implements KTTabsInterface {
 		return this._show(tabElement);
 	}
 
-	public static keyboardArrow(): void {}
+	public override dispose(): void {
+		if (!this._element) return;
 
-	public static keyboardJump(): void {}
+		KTEventHandler.off(
+			this._element,
+			'[data-kt-tab-toggle]',
+			'click'
+		);
+		
+		super.dispose();
+	}
 
-	public static handleAccessibility(): void {}
+	public static keyboardArrow(): void { }
 
-	public static getInstance(element: HTMLElement): KTTabs {
+	public static keyboardJump(): void { }
+
+	public static handleAccessibility(): void { }
+
+	public static getInstance(element: HTMLElement): KTTabs | null {
 		if (!element) return null;
 
 		if (KTData.has(element, 'tabs')) {

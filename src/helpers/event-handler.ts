@@ -18,7 +18,7 @@ const KTEventHandler = {
 		selector: string,
 		eventName: string,
 		handler: KTCallableType,
-	): string {
+	): string | null {
 		if (element === null) {
 			return null;
 		}
@@ -26,10 +26,10 @@ const KTEventHandler = {
 		const eventId = KTUtils.geUID('event');
 
 		KTDelegatedEventHandlers[eventId] = (
-			event: Event & { target: HTMLElement },
+			event?: Event & { target: HTMLElement } | any,
 		) => {
 			const targets = element.querySelectorAll(selector);
-			let target = event.target;
+			let target = event?.target;
 
 			while (target && target !== element) {
 				for (let i = 0, j = targets.length; i < j; i++) {
