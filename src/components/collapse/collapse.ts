@@ -11,6 +11,12 @@ import KTDom from '../../helpers/dom';
 import KTComponent from '../component';
 import { KTCollapseInterface, KTCollapseConfigInterface } from './types';
 
+declare global {
+	interface Window {
+		KTCollapse: typeof KTCollapse;
+	}
+}
+
 export class KTCollapse extends KTComponent implements KTCollapseInterface {
 	protected override _name: string = 'collapse';
 	protected override _defaultConfig: KTCollapseConfigInterface = {
@@ -20,7 +26,7 @@ export class KTCollapse extends KTComponent implements KTCollapseInterface {
 	};
 	protected override _config: KTCollapseConfigInterface = this._defaultConfig;
 	protected _isAnimating: boolean = false;
-	protected _targetElement: HTMLElement;
+	protected _targetElement: HTMLElement | null = null;
 
 	constructor(element: HTMLElement, config?: KTCollapseConfigInterface) {
 		super();
@@ -39,6 +45,8 @@ export class KTCollapse extends KTComponent implements KTCollapseInterface {
 	}
 
 	private _getTargetElement(): HTMLElement | null {
+		if (!this._element) return null;
+
 		return (
 			KTDom.getElement(
 				this._element.getAttribute('data-kt-collapse') as string,
@@ -47,9 +55,9 @@ export class KTCollapse extends KTComponent implements KTCollapseInterface {
 	}
 
 	protected _isOpen(): boolean {
-		return this._targetElement.classList.contains(
+		return this._targetElement?.classList.contains(
 			this._getOption('activeClass') as string,
-		);
+		) ?? false;
 	}
 
 	protected _handlers(): void {
@@ -76,6 +84,8 @@ export class KTCollapse extends KTComponent implements KTCollapseInterface {
 			this._element.setAttribute('aria-expanded', 'true');
 			this._element.classList.add(this._getOption('activeClass') as string);
 		}
+
+		if (!this._targetElement) return;
 		this._targetElement.classList.remove(
 			this._getOption('hiddenClass') as string,
 		);
@@ -89,8 +99,11 @@ export class KTCollapse extends KTComponent implements KTCollapseInterface {
 
 		KTDom.transitionEnd(this._targetElement, () => {
 			this._isAnimating = false;
-			this._targetElement.style.height = '';
-			this._targetElement.style.overflow = '';
+
+			if (this._targetElement) {
+				this._targetElement.style.height = '';
+				this._targetElement.style.overflow = '';
+			}
 
 			this._fireEvent('expanded');
 			this._dispatchEvent('expanded');
@@ -112,6 +125,8 @@ export class KTCollapse extends KTComponent implements KTCollapseInterface {
 		if (!this._element) return;
 		this._element.setAttribute('aria-expanded', 'false');
 		this._element.classList.remove(this._getOption('activeClass') as string);
+
+		if (!this._targetElement) return;
 		this._targetElement.classList.remove(
 			this._getOption('activeClass') as string,
 		);
@@ -124,10 +139,13 @@ export class KTCollapse extends KTComponent implements KTCollapseInterface {
 
 		KTDom.transitionEnd(this._targetElement, () => {
 			this._isAnimating = false;
-			this._targetElement.classList.add(
-				this._getOption('hiddenClass') as string,
-			);
-			this._targetElement.style.overflow = '';
+
+			if (this._targetElement) {
+				this._targetElement.classList.add(
+					this._getOption('hiddenClass') as string,
+				);
+				this._targetElement.style.overflow = '';
+			};
 
 			this._fireEvent('collapsed');
 			this._dispatchEvent('collapsed');
@@ -161,7 +179,7 @@ export class KTCollapse extends KTComponent implements KTCollapseInterface {
 		return this._isOpen();
 	}
 
-	public static getInstance(element: HTMLElement): KTCollapse {
+	public static getInstance(element: HTMLElement): KTCollapse | null {
 		if (!element) return null;
 
 		if (KTData.has(element, 'collapse')) {
