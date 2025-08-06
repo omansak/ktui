@@ -40,6 +40,8 @@ export class KTDrawer extends KTComponent implements KTDrawerInterface {
 	protected _backdropElement: HTMLElement | null = null;
 	protected _relatedTarget: HTMLElement | null = null;
 
+	private _KTEventHandlerEvents: Array<{ eventName: string, id: string }> = [];
+
 	constructor(element: HTMLElement, config?: KTDrawerConfigInterface) {
 		super();
 
@@ -54,9 +56,12 @@ export class KTDrawer extends KTComponent implements KTDrawerInterface {
 
 	protected _handleClose(): void {
 		if (!this._element) return;
-		KTEventHandler.on(this._element, '[data-kt-drawer-hide]', 'click', () => {
+
+		const eventId = KTEventHandler.on(this._element, '[data-kt-drawer-hide]', 'click', () => {
 			this._hide();
 		});
+
+		this._KTEventHandlerEvents.push({ eventName: 'click', id: eventId! });
 	}
 
 	protected _toggle(relatedTarget?: HTMLElement): void {
@@ -168,9 +173,10 @@ export class KTDrawer extends KTComponent implements KTDrawerInterface {
 	}
 
 	protected _update(): void {
+		if (!this._element) return;
 		if ((this._getOption('class') as string)?.length > 0) {
 			if (this.isEnabled()) {
-				KTDom.addClass(this._element, this._getOption('class') as string);
+				KTDom.addClass(this._element!, this._getOption('class') as string);
 			} else {
 				KTDom.removeClass(this._element, this._getOption('class') as string);
 			}
@@ -178,13 +184,14 @@ export class KTDrawer extends KTComponent implements KTDrawerInterface {
 	}
 
 	protected _handleContainer(): void {
+		if (!this._element) return;
 		if (this._getOption('container')) {
 			if (this._getOption('container') === 'body') {
-				document.body.appendChild(this._element);
+				document.body.appendChild(this._element!);
 			} else {
 				document
 					.querySelector(this._getOption('container') as string)
-					?.appendChild(this._element);
+					?.appendChild(this._element!);
 			}
 		}
 	}
@@ -234,7 +241,7 @@ export class KTDrawer extends KTComponent implements KTDrawerInterface {
 	}
 
 	protected _isEnabled(): boolean {
-		return KTUtils.stringToBoolean(this._getOption('enable'));
+		return KTUtils.stringToBoolean(this._getOption('enable')) ?? false;
 	}
 
 	public toggle(): void {
@@ -265,7 +272,17 @@ export class KTDrawer extends KTComponent implements KTDrawerInterface {
 		return this._isEnabled();
 	}
 
-	public static getInstance(element: HTMLElement): KTDrawer {
+	public override dispose(): void {
+		if (!this._element) return;
+
+		this._KTEventHandlerEvents.forEach((event) => {
+			KTEventHandler.off(this._element!, event.eventName, event.id);
+		});
+
+		super.dispose();
+	}
+
+	public static getInstance(element: HTMLElement): KTDrawer | null {
 		if (!element) return null;
 
 		if (KTData.has(element, 'drawer')) {
@@ -309,7 +326,7 @@ export class KTDrawer extends KTComponent implements KTDrawerInterface {
 						.querySelectorAll('[data-kt-drawer-initialized]')
 						.forEach((element) => {
 							const drawer = KTDrawer.getInstance(element as HTMLElement);
-							drawer.update();
+							drawer?.update();
 
 							if (drawer && drawer.isOpen() && !drawer.isEnabled()) {
 								drawer.hide();
@@ -326,10 +343,10 @@ export class KTDrawer extends KTComponent implements KTDrawerInterface {
 			document.body,
 			'[data-kt-drawer-toggle]',
 			'click',
-			(event: Event, target: HTMLElement) => {
-				event.stopPropagation();
+			(event?: Event, target?: HTMLElement) => {
+				event?.stopPropagation();
 
-				const selector = target.getAttribute('data-kt-drawer-toggle');
+				const selector = target?.getAttribute('data-kt-drawer-toggle');
 				if (!selector) return;
 
 				const drawerEl = document.querySelector(selector);
@@ -346,10 +363,10 @@ export class KTDrawer extends KTComponent implements KTDrawerInterface {
 			document.body,
 			'[data-kt-drawer-dismiss]',
 			'click',
-			(event: Event, target: HTMLElement) => {
-				event.stopPropagation();
+			(event?: Event, target?: HTMLElement) => {
+				event?.stopPropagation();
 
-				const modalElement = target.closest(
+				const modalElement = target?.closest(
 					'[data-kt-drawer="true"]',
 				) as HTMLElement;
 				if (modalElement) {
